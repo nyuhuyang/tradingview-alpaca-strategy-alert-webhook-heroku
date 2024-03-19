@@ -2,6 +2,6 @@
 flask
 gunicorn
 requests
-scipy=1.11.4
-python=3.10.12
+scipy==1.11.4
+python==3.10.12
 #pip3 install --force-reinstall alpaca-trade-api
