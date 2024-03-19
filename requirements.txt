@@ -1,7 +1,8 @@
 #mamba install --file requirements.txt
+scipy
+python
 flask
 gunicorn
 requests
-scipy==1.11.4
-python==3.10.12
+
 #pip3 install --force-reinstall alpaca-trade-api
