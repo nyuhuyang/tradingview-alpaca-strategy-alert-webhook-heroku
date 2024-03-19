@@ -1,8 +1,8 @@
-#mamba install --file requirements.txt
+python==3.10.12
 scipy
-python
 flask
 gunicorn
 requests
 
+#mamba install --file requirements.txt
 #pip3 install --force-reinstall alpaca-trade-api
