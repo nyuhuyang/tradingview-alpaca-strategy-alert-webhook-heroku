@@ -1,6 +1,6 @@
-scipy
 flask
 gunicorn
+alpaca-trade-api
 requests
 
 #mamba install --file requirements.txt

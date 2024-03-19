@@ -12,8 +12,8 @@ api = tradeapi.REST(config.API_KEY, config.API_SECRET, base_url='https://api.alp
 
 @app.route('/')
 def dashboard():
-    orders = api.list_orders()
-
+    orders = api.list_orders(status='all')
+    
     return render_template('dashboard.html', alpaca_orders=orders)
 
 @app.route('/webhook', methods=['POST'])
