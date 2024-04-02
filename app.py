@@ -32,12 +32,12 @@ def webhook():
     quantity = webhook_message['strategy']['order_contracts']
     symbol = webhook_message['ticker']
     order_action = webhook_message['strategy']['order_action']
-    order_id = webhook_message['strategy']['order_id']
+    position_number = webhook_message['strategy']['position_number']
     prev_market_position = webhook_message['strategy']['prev_market_position']
     
     account = api.get_account()
     
-    max_quantity = float(quantity)*float(account.daytrading_buying_power)/30000/4 #daytrading_buying_power = 4 * (last_equity - last_maintenance_margin)
+    max_quantity = float(quantity)*float(account.daytrading_buying_power)/30000/4/int(position_number) #daytrading_buying_power = 4 * (last_equity - last_maintenance_margin)
     try:
         quote = api.get_latest_quote(symbol)
         bid_price = quote.bp
