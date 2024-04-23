@@ -48,11 +48,12 @@ def webhook():
             logging.warning(f"{symbol}: get_alpaca_bid_ask: Error for symbol: {e}")
         else:
             logging.warning(f"{symbol}: get_alpaca_bid_ask: Error retrieving bid/ask prices: {e}")
+    possible_quantity = min(int(max_quantity),int(float(account.cash)/price))
 
     # close all orders
-    #orders = api.list_orders()
-    #for order in orders:
-    #    api.cancel_order(order.id)
+    orders = api.list_orders()
+    for order in orders:
+        api.cancel_order(order.id)
     # Get a list of all open positions
     positions = []
     portfolio = api.list_positions()
@@ -74,28 +75,27 @@ def webhook():
                     )
             print(order)
         if position.symbol == symbol and int(position.qty) > 0 and order_action == "buy":
-            possible_quantity = min(int(max_quantity),int(float(account.cash)/price))
-            print("Position open for ",symbol, " X ", possible_quantity)
             order = api.submit_order(
                     symbol=symbol,
                     qty=str(possible_quantity),
                     side='buy',
-                    type='limit',
-                    time_in_force='day',
-                    limit_price = price
+                    type='market',
+                    time_in_force='gtc'
+                    #time_in_force='day',
+                    #limit_price = price
                     )
             print(order)
     
     if  (portfolio == [] or (symbol not in positions)) and order_action == "buy":
-        possible_quantity = min(int(max_quantity),int(float(account.cash)/price))
         print("Position new open for ",symbol, " X ", possible_quantity)
         order = api.submit_order(
                 symbol=symbol,
                 qty=str(possible_quantity),
                 side='buy',
-                type='limit',
-                time_in_force='day',
-                limit_price = price
+                type='market',
+                time_in_force='gtc'
+                #time_in_force='day',
+                #limit_price = price
                 )
         print(order)
     
