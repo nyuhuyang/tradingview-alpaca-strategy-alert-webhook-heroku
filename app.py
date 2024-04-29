@@ -79,10 +79,10 @@ def webhook():
                     symbol=symbol,
                     qty=str(possible_quantity),
                     side='buy',
-                    type='market',
-                    time_in_force='gtc'
-                    #time_in_force='day',
-                    #limit_price = price
+                    #type='market',
+                    #time_in_force='gtc'
+                    time_in_force='day',
+                    limit_price = price
                     )
             print(order)
     
@@ -92,10 +92,10 @@ def webhook():
                 symbol=symbol,
                 qty=str(possible_quantity),
                 side='buy',
-                type='market',
-                time_in_force='gtc'
-                #time_in_force='day',
-                #limit_price = price
+                #type='market',
+                #time_in_force='gtc'
+                time_in_force='day',
+                limit_price = price
                 )
         print(order)
     
