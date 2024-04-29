@@ -81,6 +81,7 @@ def webhook():
                     side='buy',
                     #type='market',
                     #time_in_force='gtc'
+                    type='limit',
                     time_in_force='day',
                     limit_price = price
                     )
@@ -94,6 +95,7 @@ def webhook():
                 side='buy',
                 #type='market',
                 #time_in_force='gtc'
+                type='limit',
                 time_in_force='day',
                 limit_price = price
                 )
