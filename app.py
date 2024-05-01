@@ -34,7 +34,7 @@ def webhook():
     order_action = webhook_message['strategy']['order_action']
     position_number = webhook_message['strategy']['position_number']
     prev_market_position = webhook_message['strategy']['prev_market_position']
-    
+    comment = webhook_message['strategy']['comment']
     account = api.get_account()
     
     max_quantity = float(quantity)*float(account.daytrading_buying_power)/30000/4/int(position_number) #daytrading_buying_power = 4 * (last_equity - last_maintenance_margin)
@@ -75,12 +75,21 @@ def webhook():
                     )
             print(order)
         if position.symbol == symbol and int(position.qty) > 0 and order_action == "buy":
-            order = api.submit_order(
+            if comment == "LONG TvIS entry":
+                print("Open market position for ", position.symbol, " X ", position.qty)
+                order = api.submit_order(
+                        symbol=symbol,
+                        qty=str(possible_quantity),
+                        side='buy',
+                        type='market',
+                        time_in_force='gtc'
+                        )
+            else:
+                print("Open limit position for ", position.symbol, " X ", position.qty)
+                order = api.submit_order(
                     symbol=symbol,
                     qty=str(possible_quantity),
                     side='buy',
-                    #type='market',
-                    #time_in_force='gtc'
                     type='limit',
                     time_in_force='day',
                     limit_price = price
@@ -88,13 +97,21 @@ def webhook():
             print(order)
     
     if  (portfolio == [] or (symbol not in positions)) and order_action == "buy":
-        print("Position new open for ",symbol, " X ", possible_quantity)
-        order = api.submit_order(
+        if comment == "LONG TvIS entry":
+            print("Open market position for ",symbol, " X ", possible_quantity)
+            order = api.submit_order(
+                    symbol=symbol,
+                    qty=str(possible_quantity),
+                    side='buy',
+                    type='market',
+                    time_in_force='gtc'
+                    )
+        else:
+            print("Open limit position for ",symbol, " X ", possible_quantity)
+            order = api.submit_order(
                 symbol=symbol,
                 qty=str(possible_quantity),
                 side='buy',
-                #type='market',
-                #time_in_force='gtc'
                 type='limit',
                 time_in_force='day',
                 limit_price = price
