@@ -1,3 +1,4 @@
+import datetime
 from flask import Flask, render_template, request,logging
 import alpaca_trade_api as tradeapi
 import config, json, requests
@@ -17,6 +18,34 @@ def dashboard():
     return render_template('dashboard.html', alpaca_orders=orders)
 
 @app.route('/webhook', methods=['POST'])
+
+# Function to check if a given time is during extended hours
+def is_extended_hours(timestamp, exchange):
+    # Convert the timestamp string to a datetime object
+    # NOTE: Adjust the parsing if the format of 'time' is different
+    time = datetime.datetime.fromisoformat(timestamp)
+    
+    # Define extended hours based on the exchange
+    if exchange == "NYSE":
+        # Assuming the times are in Eastern Time (ET)
+        market_open = datetime.time(9, 30)  # 9:30 AM ET
+        market_close = datetime.time(16, 0)  # 4:00 PM ET
+        
+        # Pre-market and after-hours
+        pre_market_start = datetime.time(4, 0)  # 4:00 AM ET
+        after_market_end = datetime.time(20, 0)  # 8:00 PM ET
+        
+        # Check if current time is in extended hours
+        if time.time() < market_open and time.time() >= pre_market_start:
+            return True  # In pre-market hours
+        elif time.time() > market_close and time.time() <= after_market_end:
+            return True  # In after-hours
+        else:
+            return False  # Not in extended hours
+    else:
+        # Add conditions for other exchanges as needed
+        return False
+
 def webhook():
     webhook_message = json.loads(request.data)
     print('#############################################')
@@ -35,6 +64,11 @@ def webhook():
     position_number = webhook_message['strategy']['position_number']
     prev_market_position = webhook_message['strategy']['prev_market_position']
     comment = webhook_message['strategy']['comment']
+    
+    is_extended = is_extended_hours(webhook_message["time"], webhook_message["exchange"])
+    print(f"Is the event in extended hours? {is_extended}")
+
+
     account = api.get_account()
     
     max_quantity = float(quantity)*float(account.daytrading_buying_power)/30000/4/int(position_number) #daytrading_buying_power = 4 * (last_equity - last_maintenance_margin)
@@ -61,61 +95,101 @@ def webhook():
     # get all symbols of all open positions and store in a list
 
     # Iterate through the list of positions and close each one
+    extended_hours = is_extended = is_extended_hours(webhook_message["time"], webhook_message["exchange"])
+
     for position in portfolio:
         positions.append(position.symbol)
         print("{} shares of {}".format(position.qty, position.symbol))
-        if position.symbol == symbol and int(position.qty) > 0 and order_action == "sell":
-            print("Closing position for ", position.symbol, " X ", position.qty)
-            order = api.submit_order(
-                    symbol=position.symbol,
-                    qty=position.qty,
-                    side='sell',
-                    type='market',
-                    time_in_force='gtc'
+        
+        if position.symbol == symbol and int(position.qty) > 0:
+            if order_action == "sell":
+                print("Closing position for ", position.symbol, " X ", position.qty)
+                # Always use limit order for sells during extended hours
+                if extended_hours:
+                    order = api.submit_order(
+                        symbol=position.symbol,
+                        qty=position.qty,
+                        side='sell',
+                        type='limit',
+                        time_in_force='day',
+                        limit_price=price,  # Ensure you have a realistic limit price
+                        extended_hours=True
                     )
-            print(order)
-        if position.symbol == symbol and int(position.qty) > 0 and order_action == "buy":
-            if comment == "LONG TvIS entry":
-                print("Open market position for ", position.symbol, " X ", position.qty)
-                order = api.submit_order(
+                else:
+                    # Normal market order during regular hours
+                    order = api.submit_order(
+                        symbol=position.symbol,
+                        qty=position.qty,
+                        side='sell',
+                        type='market',
+                        time_in_force='gtc',
+                        extended_hours=False
+                    )
+                print(order)
+                
+            elif order_action == "buy":
+                if comment == "LONG TvIS entry":
+                    if not extended_hours:
+                        # Use market order only during regular hours for "LONG TvIS entry"
+                        print("Open market position for ", position.symbol, " X ", possible_quantity)
+                        order = api.submit_order(
+                            symbol=symbol,
+                            qty=str(possible_quantity),
+                            side='buy',
+                            type='market',
+                            time_in_force='gtc',
+                            extended_hours=False
+                        )
+                    else:
+                        # Use limit order during extended hours even for "LONG TvIS entry"
+                        print("Open limit position for ", position.symbol, " X ", possible_quantity)
+                        order = api.submit_order(
+                            symbol=symbol,
+                            qty=str(possible_quantity),
+                            side='buy',
+                            type='limit',
+                            time_in_force='day',
+                            limit_price=price,
+                            extended_hours=True
+                        )
+                else:
+                    # Use limit order in all other conditions
+                    print("Open limit position for ", position.symbol, " X ", possible_quantity)
+                    order = api.submit_order(
                         symbol=symbol,
                         qty=str(possible_quantity),
                         side='buy',
-                        type='market',
-                        time_in_force='gtc'
-                        )
-            else:
-                print("Open limit position for ", position.symbol, " X ", position.qty)
-                order = api.submit_order(
-                    symbol=symbol,
-                    qty=str(possible_quantity),
-                    side='buy',
-                    type='limit',
-                    time_in_force='day',
-                    limit_price = price
+                        type='limit',
+                        time_in_force='day',
+                        limit_price=price,
+                        extended_hours=extended_hours
                     )
-            print(order)
+                print(order)
     
-    if  (portfolio == [] or (symbol not in positions)) and order_action == "buy":
-        if comment == "LONG TvIS entry":
-            print("Open market position for ",symbol, " X ", possible_quantity)
+    if (portfolio == [] or (symbol not in positions)) and order_action == "buy":
+        print("Open position for ", symbol, " X ", possible_quantity)
+        if comment == "LONG TvIS entry" and not extended_hours:
+            # Market order only during regular hours for "LONG TvIS entry"
             order = api.submit_order(
-                    symbol=symbol,
-                    qty=str(possible_quantity),
-                    side='buy',
-                    type='market',
-                    time_in_force='gtc'
-                    )
+                symbol=symbol,
+                qty=str(possible_quantity),
+                side='buy',
+                type='market',
+                time_in_force='gtc',
+                extended_hours=False
+            )
         else:
-            print("Open limit position for ",symbol, " X ", possible_quantity)
+            # Always use limit day order during extended hours or for other comments
+            print("Open limit position for ", symbol, " X ", possible_quantity)
             order = api.submit_order(
                 symbol=symbol,
                 qty=str(possible_quantity),
                 side='buy',
                 type='limit',
                 time_in_force='day',
-                limit_price = price
-                )
+                limit_price=price,
+                extended_hours=extended_hours
+            )
         print(order)
     
     return {    'code': 'success',
