@@ -10,42 +10,26 @@ app = Flask(__name__)
 
 #api = tradeapi.REST(config.API_KEY, config.API_SECRET, base_url='https://paper-api.alpaca.markets')
 api = tradeapi.REST(config.API_KEY, config.API_SECRET, base_url='https://api.alpaca.markets')
+# Function to check if a given time is during extended hours
 
+
+# Utility function to check extended hours
+def is_extended_hours(timestamp, exchange):
+    time = datetime.datetime.fromisoformat(timestamp)
+    if exchange == "NYSE":
+        market_open = datetime.time(9, 30)  # 9:30 AM ET
+        market_close = datetime.time(16, 0)  # 4:00 PM ET
+        pre_market_start = datetime.time(4, 0)  # 4:00 AM ET
+        after_market_end = datetime.time(20, 0)  # 8:00 PM ET
+        return time.time() < market_open and time.time() >= pre_market_start or time.time() > market_close and time.time() <= after_market_end
+    return False
+    
 @app.route('/')
 def dashboard():
     orders = api.list_orders(status='all')
-    
     return render_template('dashboard.html', alpaca_orders=orders)
 
 @app.route('/webhook', methods=['POST'])
-
-# Function to check if a given time is during extended hours
-def is_extended_hours(timestamp, exchange):
-    # Convert the timestamp string to a datetime object
-    # NOTE: Adjust the parsing if the format of 'time' is different
-    time = datetime.datetime.fromisoformat(timestamp)
-    
-    # Define extended hours based on the exchange
-    if exchange == "NYSE":
-        # Assuming the times are in Eastern Time (ET)
-        market_open = datetime.time(9, 30)  # 9:30 AM ET
-        market_close = datetime.time(16, 0)  # 4:00 PM ET
-        
-        # Pre-market and after-hours
-        pre_market_start = datetime.time(4, 0)  # 4:00 AM ET
-        after_market_end = datetime.time(20, 0)  # 8:00 PM ET
-        
-        # Check if current time is in extended hours
-        if time.time() < market_open and time.time() >= pre_market_start:
-            return True  # In pre-market hours
-        elif time.time() > market_close and time.time() <= after_market_end:
-            return True  # In after-hours
-        else:
-            return False  # Not in extended hours
-    else:
-        # Add conditions for other exchanges as needed
-        return False
-
 def webhook():
     webhook_message = json.loads(request.data)
     print('#############################################')
@@ -65,7 +49,8 @@ def webhook():
     prev_market_position = webhook_message['strategy']['prev_market_position']
     comment = webhook_message['strategy']['comment']
     
-    is_extended = is_extended_hours(webhook_message["time"], webhook_message["exchange"])
+    current_time = datetime.datetime.now().isoformat()
+    is_extended = extended_hours = is_extended_hours(current_time, "NYSE")  # Assuming NYSE, adjust accordingly
     print(f"Is the event in extended hours? {is_extended}")
 
 
@@ -93,9 +78,6 @@ def webhook():
     portfolio = api.list_positions()
     # Print the quantity of shares for each position.
     # get all symbols of all open positions and store in a list
-
-    # Iterate through the list of positions and close each one
-    extended_hours = is_extended = is_extended_hours(webhook_message["time"], webhook_message["exchange"])
 
     for position in portfolio:
         positions.append(position.symbol)
