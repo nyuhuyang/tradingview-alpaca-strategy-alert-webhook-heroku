@@ -1,24 +1,31 @@
+
+
 {
-	"passphrase": "somelongstring123",
-	"time": "2020-09-05T19:47:00Z",
-	"ticker": "AAPL",
-	"bar": {
-		"time": "2020-09-05T19:46:00Z",
-		"open": 126.35,
-		"high": 128.02,
-		"low": 126.02,
-		"close": 127.75,
-		"volume": 12345
-	},
 	"strategy": {
-		"position_size": 171,
-		"order_action": "buy",
-		"order_contracts": 171,
-		"order_price": 128.50,
-		"order_id": "Close entry(s) order long",
-		"market_position": "long",
-		"market_position_size": 171,
-		"prev_market_position": "flat",
-		"prev_market_position_size": 0
-	}
+		"name": "RMI_TvIS_RSI (dynamic stop loss, 16, 10, 6, 76, 25, VWMA, 2, 8, 8, -13, QQQ · Cboe One, smoothed, 3, smoothed, VWMA, 14, 36, 95, 11, 8, 2, LONG, 0.1)",
+        "position_number": "1",
+		"order_action": "{{strategy.order.action}}",
+        "position_size": "{{strategy.position_size}}",
+        "order_contracts": "{{strategy.order.contracts}}",
+        "order_price": "{{strategy.order.price}}",
+        "order_id": "{{strategy.order.id}}",
+        "comment": "{{strategy.order.comment}}",
+        "market_position": "{{strategy.market_position}}",
+        "market_position_size": "{{strategy.market_position_size}}",
+        "prev_market_position": "{{strategy.prev_market_position}}",
+        "prev_market_position_size": "{{strategy.prev_market_position_size}}"
+    },
+    "passphrase": "irm1RY9KGtwdgr6D+/4y7oOM22eSdHT3UlcZD5muCaLKXSUgkrU",
+    "time": "{{timenow}}",
+    "exchange": "{{exchange}}",
+    "ticker": "{{ticker}}",
+    "bar": {
+        "time": "{{time}}",
+        "open": "{{open}}",
+        "high": "{{high}}",
+        "low": "{{low}}",
+        "close": "{{close}}",
+        "volume": "{{volume}}"
+    }
 }
+

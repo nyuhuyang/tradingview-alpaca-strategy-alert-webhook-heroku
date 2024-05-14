@@ -1,12 +1,14 @@
 {
 	"strategy": {
-		"name": "RMI Long 5,6,6,10,750,8",
-        "position_number": "2",
+		"name": "RMI_TvIS_RSI_HA (close only, 43, 14, 3.7, 66, 35, VWMA, 3, 12, 17, -15, QQQ · Cboe One, smoothed, 3, smoothed, VWMA, 9, 32, 70, 12, 13, 2, LONG)",
+        "trading hours" : "extended",
+        "position_number": "1",
 		"order_action": "{{strategy.order.action}}",
         "position_size": "{{strategy.position_size}}",
         "order_contracts": "{{strategy.order.contracts}}",
         "order_price": "{{strategy.order.price}}",
         "order_id": "{{strategy.order.id}}",
+	"comment": "{{strategy.order.comment}}",
         "market_position": "{{strategy.market_position}}",
         "market_position_size": "{{strategy.market_position_size}}",
         "prev_market_position": "{{strategy.prev_market_position}}",
