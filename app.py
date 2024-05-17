@@ -15,8 +15,9 @@ api = tradeapi.REST(config.API_KEY, config.API_SECRET, base_url='https://api.alp
 
 # Utility function to check extended hours
 def is_extended_hours(timestamp, exchange):
-    time = datetime.datetime.fromisoformat(timestamp)
     if exchange == "NYSE":
+        eastern = pytz.timezone('America/New_York')
+        time = timestamp.astimezone(eastern)
         market_open = datetime.time(9, 30)  # 9:30 AM ET
         market_close = datetime.time(16, 0)  # 4:00 PM ET
         pre_market_start = datetime.time(4, 0)  # 4:00 AM ET
@@ -49,11 +50,10 @@ def webhook():
     prev_market_position = webhook_message['strategy']['prev_market_position']
     comment = webhook_message['strategy']['comment']
     
-    current_time = datetime.datetime.now().isoformat()
-    is_extended = extended_hours = is_extended_hours(current_time, "NYSE")  # Assuming NYSE, adjust accordingly
-    print(f"Is the event in extended hours? {is_extended}")
-
-
+    # Get current time in UTC
+    current_time = datetime.datetime.now(pytz.timezone('America/New_York'))
+    is_extended = is_extended_hours(current_time, "NYSE")
+    print("Is it extended hours?", is_extended)
     account = api.get_account()
     
     max_quantity = float(quantity)*float(account.daytrading_buying_power)/30000/4/int(position_number) #daytrading_buying_power = 4 * (last_equity - last_maintenance_margin)
@@ -87,7 +87,7 @@ def webhook():
             if order_action == "sell":
                 print("Closing position for ", position.symbol, " X ", position.qty)
                 # Always use limit order for sells during extended hours
-                if extended_hours:
+                if is_extended:
                     order = api.submit_order(
                         symbol=position.symbol,
                         qty=position.qty,
@@ -111,7 +111,7 @@ def webhook():
                 
             elif order_action == "buy":
                 if comment == "LONG TvIS entry":
-                    if not extended_hours:
+                    if not is_extended:
                         # Use market order only during regular hours for "LONG TvIS entry"
                         print("Open market position for ", position.symbol, " X ", possible_quantity)
                         order = api.submit_order(
