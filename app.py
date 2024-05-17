@@ -1,4 +1,5 @@
 import datetime
+import pytz
 from flask import Flask, render_template, request,logging
 import alpaca_trade_api as tradeapi
 import config, json, requests
