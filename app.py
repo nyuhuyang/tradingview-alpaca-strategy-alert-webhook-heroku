@@ -145,7 +145,7 @@ def webhook():
                         type='limit',
                         time_in_force='day',
                         limit_price=price,
-                        extended_hours=extended_hours
+                        extended_hours=is_extended
                     )
                 print(order)
     
@@ -171,7 +171,7 @@ def webhook():
                 type='limit',
                 time_in_force='day',
                 limit_price=price,
-                extended_hours=extended_hours
+                extended_hours=is_extended
             )
         print(order)
     
