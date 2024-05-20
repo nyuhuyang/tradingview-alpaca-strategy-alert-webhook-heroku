@@ -151,7 +151,7 @@ def webhook():
     
     if (portfolio == [] or (symbol not in positions)) and order_action == "buy":
         print("Open position for ", symbol, " X ", possible_quantity)
-        if comment == "LONG TvIS entry" and not extended_hours:
+        if comment == "LONG TvIS entry" and not is_extended:
             # Market order only during regular hours for "LONG TvIS entry"
             order = api.submit_order(
                 symbol=symbol,
