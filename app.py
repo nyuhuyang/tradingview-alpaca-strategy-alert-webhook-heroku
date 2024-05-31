@@ -55,6 +55,12 @@ def webhook():
     current_time = datetime.datetime.now(pytz.timezone('America/New_York'))
     is_extended = is_extended_hours(current_time, "NYSE")
     print("Is it extended hours?", is_extended)
+    
+        # close all orders
+    orders = api.list_orders()
+    for order in orders:
+        api.cancel_order(order.id)
+
     account = api.get_account()
     
     max_quantity = float(quantity)*float(account.daytrading_buying_power)/30000/4/int(position_number) #daytrading_buying_power = 4 * (last_equity - last_maintenance_margin)
@@ -70,10 +76,6 @@ def webhook():
             logging.warning(f"{symbol}: get_alpaca_bid_ask: Error retrieving bid/ask prices: {e}")
     possible_quantity = min(int(max_quantity),int(float(account.cash)/price))
 
-    # close all orders
-    orders = api.list_orders()
-    for order in orders:
-        api.cancel_order(order.id)
     # Get a list of all open positions
     positions = []
     portfolio = api.list_positions()
